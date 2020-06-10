@@ -9,5 +9,5 @@ data:
     server.host: "0"
     elasticsearch.url: http://elasticsearch:9200
     xpack.monitoring.ui.container.elasticsearch.enabled: true
-    elasticsearch.username: Username
-    elasticsearch.password: Password
+    elasticsearch.username: UsernameXYZ
+    elasticsearch.password: PasswordXYZ
