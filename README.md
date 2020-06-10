@@ -137,15 +137,15 @@ volumeClaimTemplates:
 - Once passwords are set, we need to activate the trial version.
   - For this, I used postman, but you can use any agent that can make a post request.
   - Append /_license/start_trial?acknowledge=true at the end of elasticsearch url.
-  - For credentials use the user, 'elastic', and password, 'Password1$'.
+  - For credentials use the user of your choice, 'UserXYZ', and password of your choice, 'PasswordXYZ'.
 - Elasticsearch setup is complete now.
 
 #### Step 5c
 - Create configmap for kibana 
 - Make sure to add the following
   - Elasticsearch url
-  - Username: kibana
-  - Password: Password1$
+  - Username: UserXYZ
+  - Password: PasswordXYZ
 ```yaml
 data:
   kibana.yml: |
@@ -153,8 +153,8 @@ data:
     server.host: "0"
     elasticsearch.url: http://elasticsearch:9200
     xpack.monitoring.ui.container.elasticsearch.enabled: true
-    elasticsearch.username: kibana
-    elasticsearch.password: Password1$
+    elasticsearch.username: UserXYZ
+    elasticsearch.password: PasswordXYZ
 ```
 
 ## Step 6
@@ -217,8 +217,8 @@ data:
     xpack.monitoring.elasticsearch.url: http://elasticsearch:9200
     dead_letter_queue.enable: true
     xpack.monitoring.enabled: true
-    xpack.monitoring.elasticsearch.username: logstash_system
-    xpack.monitoring.elasticsearch.password: Password1$
+    xpack.monitoring.elasticsearch.username: UserXYZ
+    xpack.monitoring.elasticsearch.password: PasswordXYZ
   pipelines.yml: |
     - pipeline.id: azureeventhubs
       path.config: "/usr/share/logstash/azureeventhubs.cfg"
@@ -226,12 +226,12 @@ data:
   azureeventhubs.cfg: |
     input {
       azure_event_hubs {
-        event_hub_connections => ["Endpoint=sb://kd-logstash.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=k8MEF+HR1mgLj1NRu40SuutCvgNszrcMrktLI5bG+a4=;EntityPath=kd-events"]
+        event_hub_connections => [Endpoint connection]
         threads => 2
         decorate_events => true
         consumer_group => "$Default"
-        storage_connection => "DefaultEndpointsProtocol=https;AccountName=kdlog;AccountKey=Fk/lvvew3qY49dRtZZ2StNNhBPz3LQPOQsAH5K1JzvTF7LRAX7AWdvWrN7KEdQIpr270ogdIN+uSRqBBxHrgpg==;EndpointSuffix=core.windows.net"
-        storage_container => "kd-events"
+        storage_connection => "Storage connection"
+        storage_container => "eventstorage"
         }
     }
     filter {
