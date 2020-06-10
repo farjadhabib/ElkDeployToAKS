@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch
+  labels:
+    service: elasticsearch
+spec:
+  type: LoadBalancer
+  selector:
+    service: elasticsearch
+  ports:
+  - name: http
+    port: 9200
+    targetPort: 9200
+    protocol: TCP
+  - name: transport
+    port: 9300
+    targetPort: 9300
+    protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: elasticsearch-discovery
+spec:
+  clusterIP: None
+  selector:
+    service: elasticsearch
+  ports:
+  - name: transport
+    port: 9300

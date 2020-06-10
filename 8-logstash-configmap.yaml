@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: logstash-configmap
+  namespace: elk-logging
+data:
+
+  logstash.yml: |
+    xpack.monitoring.elasticsearch.url: http://elasticsearch:9200
+    dead_letter_queue.enable: true
+    xpack.monitoring.enabled: true
+    xpack.monitoring.elasticsearch.username: Username
+    xpack.monitoring.elasticsearch.password: Password
+  pipelines.yml: |
+    - pipeline.id: azureeventhubs
+      path.config: "/usr/share/logstash/azureeventhubs.cfg"
+
+  azureeventhubs.cfg: |
+    input {
+      azure_event_hubs {
+        event_hub_connections => [EventHub Connection String]
+        threads => 2
+        decorate_events => true
+        consumer_group => "$Default"
+        storage_connection => "Storage connection string"
+        storage_container => "kd-events"
+        }
+    }
+    filter {
+      json {
+        source => "message"
+        target => "newmessage"
+      }
+    }
+    output {
+      elasticsearch {
+        hosts => [ "elasticsearch:9200" ]
+        user => "username"
+        password => "password"
+        index => "azureeventhub-%{+YYYY.MM.dd}"
+      }
+    }
+  logstash.conf: |

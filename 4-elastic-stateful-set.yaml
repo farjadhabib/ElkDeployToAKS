@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: elasticsearch
+  labels:
+    service: elasticsearch
+spec:
+  serviceName: elasticsearch-discovery
+  # Number of PODS
+  replicas: 1
+  selector:
+    matchLabels:
+      service: elasticsearch
+  template:
+    metadata:
+      labels:
+        service: elasticsearch
+    spec:
+      terminationGracePeriodSeconds: 15
+      initContainers:
+      # https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html
+      - name: increase-the-vm-max-map-count
+        image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
+        securityContext:
+          privileged: true
+      - name: fix-the-volume-permission
+        image: busybox
+        command: ["sh", "-c", "chown -R 1000:1000 /usr/share/elasticsearch/data"]
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: elasticsearch-data-claim
+          mountPath: /usr/share/elasticsearch/data
+      containers:
+      - name: elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch:6.4.1
+        resources:
+          limits:
+            cpu: 2000m
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 1Gi
+        ports:
+        - containerPort: 9200
+          name: http
+        - containerPort: 9300
+          name: tcp
+        env:
+          - name: cluster.name
+            value: "elasticsearch-cluster"
+          - name: "xpack.security.enabled"
+            value: "true"
+          - name: "TAKE_FILE_OWNERSHIP"
+            value: “1”
+          - name: node.name
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: discovery.zen.ping.unicast.hosts
+            value: "elasticsearch-discovery:9300"
+        volumeMounts:
+        - name: elasticsearch-data-claim
+          mountPath: /usr/share/elasticsearch/data
+        - name: elasticsearch-configmap
+          mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+          subPath: elasticsearch.yml
+        - name: elasticsearch-configmap
+          mountPath: /usr/share/elasticsearch/config/role_mapping.yml
+          subPath: role_mapping.yml
+      volumes:
+      - name: elasticsearch-configmap
+        configMap:
+            name: elasticsearch-configmap
+  volumeClaimTemplates:
+  - metadata:
+      name: elasticsearch-data-claim
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: defaultku
+      resources:
+        requests:
+          storage: 2Gi
